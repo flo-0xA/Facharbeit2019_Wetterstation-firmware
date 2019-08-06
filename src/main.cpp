@@ -8,6 +8,12 @@
 #include <Adafruit_BME280.h>
 #include <LaCrosse_TX23.h>
 
+/* Konfiguartion für Deepsleep */
+#define uS_TO_S_FACTOR 1000000
+#define TIME_TO_SLEEP 60
+
+RTC_DATA_ATTR int bootCount = 0;
+
 /* Konfiguartion für Sensorik */
 #define SEA_LEVEL_PREPRESSURE (1013.25)
 #define WIND_SENSOR_DATA_PIN 18
@@ -63,9 +69,9 @@ void setup_wifi() {
 /* Verbindung bei Abbruch erneut herstellen */
 void reconnect() {
     while (!client.connected()) {
-        Serial.print("Reconnecting...");
+        Serial.println("Reconnecting...");
         if (!client.connect("ESP32_Weatherstation")) {
-            Serial.print("failed, rc=");
+            Serial.print("...failed, rc=");
             Serial.print(client.state());
             Serial.println(" retrying...");
             delay(5000);
@@ -74,6 +80,8 @@ void reconnect() {
 }
  
 void setup() {
+    esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+
     Serial.begin(115200);
     setup_wifi();
     client.setServer(MQTT_BROKER, 1883);
@@ -90,9 +98,7 @@ void setup() {
         Serial.print("        ID of 0x60 represents a BME 280.\n");
         Serial.print("        ID of 0x61 represents a BME 680.\n");
     }
-}
 
-void loop() {
     if (!client.connected()) {
         reconnect();
     }
@@ -116,4 +122,10 @@ void loop() {
     }
 
     delay(5000);
+
+    Serial.println("Will sleep now...");
+    Serial.flush();
+    esp_deep_sleep_start(); // für 60 Sekunden schlafen
 }
+
+void loop() {}
