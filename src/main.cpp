@@ -6,11 +6,11 @@
 
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
-//#include <LaCrosse_TX23.h>
+#include <LaCrosse_TX23.h>
 
 /* Konfiguartion für Sensorik */
 #define SEA_LEVEL_PREPRESSURE (1013.25)
-#define DATA_PIN 10
+#define WIND_SENSOR_DATA_PIN 18
 
 /* Konfiguration für MQTT - Kommunikation */
 const char* SSID = "IoTify";
@@ -26,7 +26,7 @@ const char* topic_windDirection = "/wetterstation/wind_direction";
 
 /* Definitionen bzw. Deklaration für den Windsensor  */
 const char* directionTable[] = {"N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"};
-int speed;    // Windgeschwindigkeit in m/s
+float speed;    // Windgeschwindigkeit in m/s
 int direction;  // Index der directionTable (Himmelsrichtung)
  
 /* Deklaration für den Temperatursensor */
@@ -39,7 +39,7 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 
 Adafruit_BME280 tempSensor;
-//LaCrosse_TX23 windSensor = LaCrosse_TX23(DATA_PIN);
+LaCrosse_TX23 windSensor = LaCrosse_TX23(WIND_SENSOR_DATA_PIN);
 
 /* Verbindung zum WLAN-Netzwerk aufbauen */
 void setup_wifi() {
@@ -108,6 +108,12 @@ void loop() {
     client.publish(topic_temperature, String(temperature).c_str());
     client.publish(topic_humidity, String(humidity).c_str());
     client.publish(topic_pressure, String(pressure).c_str());
+
+    /* Windsensor bzw. Anemometer auslesen */
+    if(windSensor.read(speed, direction)) {
+        client.publish(topic_windSpeed, String(speed, 1).c_str());
+        client.publish(topic_windDirection, directionTable[direction]);
+    }
 
     delay(5000);
 }
