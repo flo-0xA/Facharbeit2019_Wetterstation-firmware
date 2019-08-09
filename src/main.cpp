@@ -85,6 +85,8 @@ void reconnect() {
 int wakeup_reason() {
     return esp_sleep_get_wakeup_cause();
 }
+
+void callback() {}
  
 void setup() {
     Serial.begin(115200);
@@ -92,7 +94,7 @@ void setup() {
     ++bootCount;
     Serial.println("Anzahl der Boots / Starts: " + String(bootCount));
 
-    esp_sleep_enable_ext0_wakeup(GPIO_NUM_33, 1);   // Auf Regensensor reagieren
+    esp_sleep_enable_ext0_wakeup(GPIO_NUM_33,1);  // Auf Regensensor reagieren
     esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);  // Auf RTC reagieren
 
     setup_wifi();
