@@ -12,18 +12,20 @@
 #define uS_TO_S_FACTOR 1000000
 #define TIME_TO_SLEEP 60
 
-RTC_DATA_ATTR int bootCount = 0;
-
 /* Konfiguartion für Sensorik */
 #define SEA_LEVEL_PREPRESSURE (1013.25)
 #define WIND_SENSOR_DATA_PIN 18
+
+/* Variablen im Deppsleep beibehalten */
+RTC_DATA_ATTR int bootCount = 0;
+RTC_DATA_ATTR int waterTippingCount = 0;
 
 /* Konfiguration für MQTT - Kommunikation */
 const char* SSID = "IoTify";
 const char* PSK = "wBox2019";
 const char* MQTT_BROKER = "192.168.178.46";
 
-// MQTT topics
+/* MQTT topics */
 const char* topic_temperature = "/wetterstation/temperature";
 const char* topic_humidity = "/wetterstation/humidity";
 const char* topic_pressure = "/wetterstation/pressure";
@@ -80,13 +82,20 @@ void reconnect() {
 }
  
 void setup() {
-    esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
-
     Serial.begin(115200);
+
+    ++bootCount;
+    Serial.println("Anzahl der Boots / Starts: " + String(bootCount));
+
+    wakeup_reason();
+
+    esp_sleep_enable_ext0_wakeup(GPIO_NUM_33, 1);   // Auf Regensensor reagieren
+    esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);  // Auf RTC reagieren
+
     setup_wifi();
     client.setServer(MQTT_BROKER, 1883);
 
-    /* Sensoren initialisieren bzw. starten */
+    // Temperatursensor initialisieren bzw. starten
     status = tempSensor.begin();
 
     // Fehlerbehandlung falls der Sensor nicht funktioniert
@@ -103,8 +112,6 @@ void setup() {
         reconnect();
     }
     client.loop();
-
-//    client.publish("/home/data", "Hello World");    // Benutzung: publish( MQTT-Topic, Nachricht )
 
     /* Temperatursensor auslesen */
     temperature = tempSensor.readTemperature();
@@ -123,9 +130,18 @@ void setup() {
 
     delay(5000);
 
-    Serial.println("Will sleep now...");
+    Serial.println("Going to sleep now...");
     Serial.flush();
+
+    /* Jegliche Verbindungen trennen */
+    client.disconnect();
+    WiFi.disconnect();
+
     esp_deep_sleep_start(); // für 60 Sekunden schlafen
+}
+
+int wakeup_reason() {
+    return esp_sleep_get_wakeup_cause();
 }
 
 void loop() {}
