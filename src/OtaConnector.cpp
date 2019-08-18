@@ -22,7 +22,7 @@ namespace ota
         return header.substring(strlen(headerName.c_str()));
     }
 
-    void init(WiFiClient &obj)
+    void init(WiFiClient obj)
     {
         client = obj;
     }
@@ -33,9 +33,9 @@ namespace ota
 
         if (client.connect(String(OTA_HOST).c_str(), OTA_PORT))
         {
-            Serial.println("Firmware holen: " + String(OTA_FIRMAWARE));
+            Serial.println("Firmware holen: " + String(OTA_FIRMWARE));
 
-            client.print(String("GET ") + OTA_FIRMAWARE + " HTTP/1.1\r\n" +
+            client.print(String("GET ") + OTA_FIRMWARE + " HTTP/1.1\r\n" +
                     "Host: " + OTA_HOST + "\r\n" +
                     "Cache-Control: no-chace\r\n" +
                     "Connection: close\r\n\r\n"
