@@ -39,7 +39,7 @@ namespace wlan
         return client.connected();
     }
 
-    WiFiClient getClient()
+    WiFiClient& getClient()
     {
         return client;
     }
