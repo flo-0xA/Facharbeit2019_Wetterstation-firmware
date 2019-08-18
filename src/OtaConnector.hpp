@@ -6,6 +6,7 @@
 
 namespace ota
 {
+//  String getHeaderValue(String header, String headerName);
     void init(WiFiClient client);
     void exec();
 }
