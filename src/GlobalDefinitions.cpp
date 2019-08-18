@@ -10,7 +10,8 @@ short TIME_TO_SLEEP = 60;
 char* WLAN_SSID = "IoTify";
 char* WLAN_KEY = "wBox2019";
 
-char* OTA_FIRMWARE_PATH = "";
+char* OTA_HOST = "";
+char* OTA_FIRMWARE = "";
 
 /* Konfiguration für MQTT */
 char* MQTT_BROKER = "192.168.178.46";
