@@ -16,8 +16,7 @@ namespace wlan
      */
     void connect()
     {
-        Serial.print("Verbinden mit ");
-        Serial.println(WLAN_SSID);
+        Serial.print("Verbinden mit: " + String(WLAN_SSID));
 
         WiFi.begin(WLAN_SSID, WLAN_KEY);
 
@@ -27,12 +26,9 @@ namespace wlan
             Serial.print(".");
         }
 
-        Serial.print("Erfolgreich mit ");
-        Serial.print(WLAN_SSID);
-        Serial.println(" verbunden");
+        Serial.print("Erfolgreich mit " + String(WLAN_SSID) + " verbunden");
 
-        Serial.print("Aktuelle IP(v4)-Adresse: ");
-        Serial.println(WiFi.localIP());   
+        Serial.print("Aktuelle IP(v4)-Adresse: " + String(WiFi.localIP()));
     }
 
     /*
