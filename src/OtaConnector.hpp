@@ -7,7 +7,7 @@
 namespace ota
 {
     void init(WiFiClient client);
-    bool exec();
+    void exec();
 }
 
 #endif

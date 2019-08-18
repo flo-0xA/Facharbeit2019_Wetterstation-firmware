@@ -13,8 +13,6 @@ namespace ota
 {
     WiFiClient client;
 
-    int returnValue = 0;
-
     int contentLength = 0;
     bool isValidContentType = false;
     String contentType = "";
@@ -29,7 +27,7 @@ namespace ota
         client = obj;
     }
 
-    bool exec()
+    void exec()
     {
         Serial.println("Verbinden mit: " + String(OTA_HOST));
 
@@ -130,33 +128,23 @@ namespace ota
                     else
                     {
                         Serial.println("Update nicht fertiggestellt? Ein Fehler ist aufgetreten!");
-                        
-                        returnValue = -1;
                     }
                 }
                 else
                 {
                     Serial.println("Ein Fehler ist aufgetreten. Fehler #: " + String(Update.getError()));
-                
-                    returnValue = -1;
                 }
             } 
             else 
             {
                 Serial.println("Nicht genug Speicher verfügbar!");
                 client.flush();
-            
-                returnValue = -1;
             }
         }
         else 
         {
             Serial.println("Kein Inhalt in Antwort gefunden");
             client.flush();
-        
-            returnValue = -1;
         }
-
-        return returnValue;
     }
 }
