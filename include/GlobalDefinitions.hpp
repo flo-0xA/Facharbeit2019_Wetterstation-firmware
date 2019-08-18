@@ -11,7 +11,8 @@ extern char* OTA_HOST;
 extern int OTA_PORT;
 extern char* OTA_FIRMWARE;
 
-extern char* MQTT_BROKER;
+extern char* MQTT_HOST;
+extern int MQTT_PORT;
 
 extern char* TOPIC_TEMPERATURE;
 extern char* TOPIC_HUMIDITY;

@@ -15,7 +15,8 @@ int OTA_PORT = 80;
 char* OTA_FIRMWARE = "";
 
 /* Konfiguration für MQTT */
-char* MQTT_BROKER = "192.168.178.46";
+char* MQTT_HOST = "192.168.178.46";
+int MQTT_PORT = 1883;
 
 char* TOPIC_TEMPERATURE = "/wetterstation/temperature";
 char* TOPIC_HUMIDITY = "/wetterstation/humidity";
