@@ -8,6 +8,7 @@ extern char* WLAN_SSID;
 extern char* WLAN_KEY;
 
 extern char* OTA_HOST;
+extern int OTA_PORT;
 extern char* OTA_FIRMAWARE;
 
 extern char* MQTT_BROKER;
