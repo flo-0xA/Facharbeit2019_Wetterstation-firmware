@@ -4,12 +4,12 @@
 #include "WlanConnector.hpp"
 #include "OtaConnector.hpp"
 
-#include <Wire.h>
-#include <SPI.h>
+// #include <Wire.h>
+// #include <SPI.h>
 
-#include <Adafruit_Sensor.h>
-#include <Adafruit_BME280.h>
-#include <LaCrosse_TX23.h>
+// #include <Adafruit_Sensor.h>
+// #include <Adafruit_BME280.h>
+// #include <LaCrosse_TX23.h>
 
 void setup()
 {
@@ -21,7 +21,7 @@ void setup()
     // 1.5 OTA-Prozedur ausführen
     ota::init(wlan::getClient());
 
-    bool status = ota::exec();
+    ota::exec();
 
     // 2. Deepsleep konfigurieren
 
