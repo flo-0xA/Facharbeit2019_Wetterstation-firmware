@@ -95,10 +95,10 @@ void setup()
             mqtt::publish(TOPIC_WIND_DIRECTION, String(windDirection).c_str());
         }
 
-        // batteryVoltage = map(analogRead(32), 0.0f, 4095.0f, 0, 100);    // Ausgabe in Prozent
+/*         // batteryVoltage = map(analogRead(32), 0.0f, 4095.0f, 0, 100);    // Ausgabe in Prozent
         batteryVoltage = analogRead(32);    // Ausgabe in Volt
 
-        mqtt::publish(TOPIC_BATTERY, String(batteryVoltage).c_str());
+        mqtt::publish(TOPIC_BATTERY, String(batteryVoltage).c_str()); */
     }
     else
     {
