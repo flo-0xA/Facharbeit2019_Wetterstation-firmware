@@ -3,9 +3,9 @@
  */ 
 #include "WlanConnector.hpp"
 #include "OtaConnector.hpp"
+#include "MqttConnector.hpp"
 
 // #include <Wire.h>
-// #include <SPI.h>
 
 // #include <Adafruit_Sensor.h>
 // #include <Adafruit_BME280.h>
@@ -38,17 +38,17 @@ void setup()
 
 
     // 3. Verbindung zu MQTT-Broker herstellen
-
+    mqtt::connect();
 
     // 4. Sensor Daten via MQTT übermitteln
-
+    
 
     // 5. Deepsleep ausführen
     Serial.println("ESP wird in Deepsleep versetzt...");
     Serial.flush();
 
     // mqttClient.disconnect();
-    WiFi.disconnect();
+    wlan::disconnect();
 
     esp_deep_sleep_start();
 
