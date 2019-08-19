@@ -7,6 +7,7 @@
 namespace wlan 
 {
     void connect();
+    void disconnect();
     bool isConnected();
     WiFiClient& getClient();
 }

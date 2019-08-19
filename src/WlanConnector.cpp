@@ -32,6 +32,14 @@ namespace wlan
     }
 
     /*
+     * 
+     */
+    void disconnect()
+    {
+        WiFi.disconnect();
+    }
+
+    /*
      *
      */
     bool isConnected()
