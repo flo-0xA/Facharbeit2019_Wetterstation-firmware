@@ -21,5 +21,7 @@ extern char* TOPIC_WIND_SPEED;
 extern char* TOPIC_WIND_DIRECTION;
 extern char* TOPIC_RAIN;
 extern char* TOPIC_BATTERY;
+extern char* TOPIC_UVA;
+extern char* TOPIC_UVB;
 
 #endif

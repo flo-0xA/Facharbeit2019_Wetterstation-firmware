@@ -26,3 +26,5 @@ char* TOPIC_WIND_SPEED = "/wetterstation/wind_speed";
 char* TOPIC_WIND_DIRECTION = "/wetterstation/wind_direction";
 char* TOPIC_RAIN = "/wetterstation/rain";
 char* TOPIC_BATTERY = "/wetterstation/battery";
+char* TOPIC_UVA = "/wetterstation/uvA";
+char* TOPIC_UVB = "/wetterstation/uvB";
