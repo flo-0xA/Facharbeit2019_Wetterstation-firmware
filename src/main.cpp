@@ -29,6 +29,8 @@ float uvB = 0;
 float windSpeed;
 int windDirection;
 
+float batteryVoltage;
+
 Adafruit_BME280 temperatureSensor;
 VEML6075 uvSensor;
 LaCrosse_TX23 windSensor = LaCrosse_TX23(39);
@@ -92,6 +94,11 @@ void setup()
             mqtt::publish(TOPIC_WIND_SPEED, String(windSpeed).c_str());
             mqtt::publish(TOPIC_WIND_DIRECTION, String(windDirection).c_str());
         }
+
+        // batteryVoltage = map(analogRead(32), 0.0f, 4095.0f, 0, 100);    // Ausgabe in Prozent
+        batteryVoltage = analogRead(32);    // Ausgabe in Volt
+
+        mqtt::publish(TOPIC_BATTERY, String(batteryVoltage).c_str());
     }
     else
     {
@@ -108,7 +115,6 @@ void setup()
     wlan::disconnect();
 
     esp_deep_sleep_start();
-
 }
 
 void loop() {
