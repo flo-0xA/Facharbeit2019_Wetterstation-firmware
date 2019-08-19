@@ -10,6 +10,7 @@ short TIME_TO_SLEEP = 60;
 char* WLAN_SSID = "IoTify";
 char* WLAN_KEY = "wBox2019";
 
+/* Konfiguration für OTA-Update */
 char* OTA_HOST = "";
 int OTA_PORT = 80;
 char* OTA_FIRMWARE = "";
