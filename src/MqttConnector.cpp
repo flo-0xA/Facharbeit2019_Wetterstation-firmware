@@ -48,7 +48,7 @@ namespace mqtt
     /*
      *
      */
-    bool publish(char* topic, char* message)
+    bool publish(char* topic, const char* message)
     {
         return client.publish(topic, message);
     }

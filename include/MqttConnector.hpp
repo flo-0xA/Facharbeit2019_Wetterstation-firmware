@@ -7,7 +7,7 @@ namespace mqtt
     void connect();
     void disconnect();
     bool isConnected();
-    bool publish(char* topic, char* message);
+    bool publish(char* topic, const char* message);
 }
 
 #endif
