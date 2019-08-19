@@ -55,7 +55,7 @@ void setup()
     esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);  // Auf RTC reagieren
 
 
-    // Verbindung zu MQTT-Broker herstellen
+    // Verbindung zum MQTT-Broker herstellen
     mqtt::connect();
 
     // Sensor Daten verarbeiten
@@ -95,10 +95,14 @@ void setup()
             mqtt::publish(TOPIC_WIND_DIRECTION, String(windDirection).c_str());
         }
 
-/*         // batteryVoltage = map(analogRead(32), 0.0f, 4095.0f, 0, 100);    // Ausgabe in Prozent
-        batteryVoltage = analogRead(32);    // Ausgabe in Volt
+        // Akkuspannung nur bei Dunkelheit messen
+        if (analogRead(14) < 255)
+        {
+            // batteryVoltage = map(analogRead(32), 0.0f, 4095.0f, 0, 100);    // Ausgabe in Prozent
+            batteryVoltage = analogRead(32);    // Ausgabe in Volt
 
-        mqtt::publish(TOPIC_BATTERY, String(batteryVoltage).c_str()); */
+            mqtt::publish(TOPIC_BATTERY, String(batteryVoltage).c_str());
+        }
     }
     else
     {
