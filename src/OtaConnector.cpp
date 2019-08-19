@@ -17,16 +17,25 @@ namespace ota
     bool isValidContentType = false;
     String contentType = "";
 
+    /*
+     * 
+     */
     String getHeaderValue(String header, String headerName)
     {
         return header.substring(strlen(headerName.c_str()));
     }
 
+    /*
+     * 
+     */
     void init(WiFiClient obj)
     {
         client = obj;
     }
 
+    /*
+     * 
+     */
     void exec()
     {
         Serial.println("Verbinden mit: " + String(OTA_HOST));
