@@ -10,7 +10,7 @@
 
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
-#include <Adafruit_VEML6070.h>
+#include <Adafruit_VEML6075.h>
 #include <LaCrosse_TX23.h>
 
 /* Konfiguartion für Deepsleep */
@@ -24,7 +24,8 @@ float temperature = 0;
 float humidity = 0;
 float pressure = 0;
 
-// UV Sensor
+float uvA;
+float uvB;
 
 float windSpeed;
 int windDirection;
@@ -32,7 +33,7 @@ int windDirection;
 float batteryVoltage;
 
 Adafruit_BME280 temperatureSensor;
-//Adafruit_VEML6070 uvSensor;
+Adafruit_VEML6075 uvSensor = Adafruit_VEML6075();
 LaCrosse_TX23 windSensor = LaCrosse_TX23(4);
 
 void setup()
@@ -76,10 +77,16 @@ void setup()
         mqtt::publish(TOPIC_HUMIDITY, String(humidity).c_str());
         mqtt::publish(TOPIC_PRESSURE, String(pressure).c_str());
 
-        // UV Sensor
+        if (uvSensor.begin())
+        {
+            uvA = uvSensor.readUVA();
+            uvB = uvSensor.readUVB();
+        } else {
+            Serial.println("Kein Kommunikation mit VEML6075 möglich! Verbindung prüfen.");
+        }
 
-        //mqtt::publish(TOPIC_UVA, String(uvA).c_str());
-        //mqtt::publish(TOPIC_UVB, String(uvB).c_str());     
+        mqtt::publish(TOPIC_UVA, String(uvA).c_str());
+        mqtt::publish(TOPIC_UVB, String(uvB).c_str());     
 
         if (windSensor.read(windSpeed, windDirection))
         {
