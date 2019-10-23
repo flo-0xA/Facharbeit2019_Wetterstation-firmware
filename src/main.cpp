@@ -10,11 +10,12 @@
 
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
-#include <SparkFun_VEML6075_Arduino_Library.h>
+#include <Adafruit_VEML6070.h>
 #include <LaCrosse_TX23.h>
 
 /* Konfiguartion für Deepsleep */
-#define uS_TO_S_FACTOR 1000000
+#define uS_TO_S_FACTOR 10
+
 #define TIME_TO_SLEEP 60
 
 RTC_DATA_ATTR int bootCount = 0;
@@ -23,8 +24,7 @@ float temperature = 0;
 float humidity = 0;
 float pressure = 0;
 
-float uvA = 0;
-float uvB = 0;
+// UV Sensor
 
 float windSpeed;
 int windDirection;
@@ -32,8 +32,8 @@ int windDirection;
 float batteryVoltage;
 
 Adafruit_BME280 temperatureSensor;
-VEML6075 uvSensor;
-LaCrosse_TX23 windSensor = LaCrosse_TX23(39);
+//Adafruit_VEML6070 uvSensor;
+LaCrosse_TX23 windSensor = LaCrosse_TX23(4);
 
 void setup()
 {
@@ -51,7 +51,7 @@ void setup()
     bootCount++;
     Serial.println("Anzahl der Boots / Starts: " + String(bootCount));
 
-    esp_sleep_enable_ext0_wakeup(GPIO_NUM_33,1);  // Auf Regensensor reagieren
+    esp_sleep_enable_ext0_wakeup(GPIO_NUM_2,1);  // Auf Regensensor reagieren
     esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);  // Auf RTC reagieren
 
 
@@ -76,18 +76,10 @@ void setup()
         mqtt::publish(TOPIC_HUMIDITY, String(humidity).c_str());
         mqtt::publish(TOPIC_PRESSURE, String(pressure).c_str());
 
-        if (uvSensor.begin())
-        {
-            uvA = uvSensor.a();
-            uvB = uvSensor.b();
-        }
-        else
-        {
-            Serial.println("Keine Kommunikation mit VEML6075 möglich! Verbindung prüfen.");
-        }
+        // UV Sensor
 
-        mqtt::publish(TOPIC_UVA, String(uvA).c_str());
-        mqtt::publish(TOPIC_UVB, String(uvB).c_str());     
+        //mqtt::publish(TOPIC_UVA, String(uvA).c_str());
+        //mqtt::publish(TOPIC_UVB, String(uvB).c_str());     
 
         if (windSensor.read(windSpeed, windDirection))
         {
