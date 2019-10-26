@@ -13,6 +13,8 @@
 #include <Adafruit_VEML6075.h>
 #include <LaCrosse_TX23.h>
 
+#include <cstdlib>
+
 /* Konfiguartion für Deepsleep */
 #define uS_TO_S_FACTOR 1000000
 
@@ -100,16 +102,17 @@ void setup()
 
         if (uvSensor.begin())
         {
-            uvA = uvSensor.readUVA();
-            uvB = uvSensor.readUVB();
+            uvA = abs(uvSensor.readUVA());
+            uvB = abs(uvSensor.readUVB());
 
-            uvIndex = uvSensor.readUVI();
+            uvIndex = abs(uvSensor.readUVI());
         } else {
             Serial.println("Kein Kommunikation mit VEML6075 möglich! Verbindung prüfen.");
         }
 
         //mqtt::publish(TOPIC_UVA, String(uvA).c_str());
-        //mqtt::publish(TOPIC_UVB, String(uvB).c_str());     
+        //mqtt::publish(TOPIC_UVB, String(uvB).c_str());
+        //mqtt::publish(TOPIC_UVI, String(uvIndex).c_str());    
 
         Serial.print("UV-A: ");
         Serial.println(uvA);
