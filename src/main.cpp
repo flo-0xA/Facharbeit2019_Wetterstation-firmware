@@ -1,153 +1,161 @@
-#include <WiFi.h>
-#include <PubSubClient.h>
-
 #include <Wire.h>
-#include <SPI.h>
 
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
+#include <Adafruit_VEML6075.h>
 #include <LaCrosse_TX23.h>
 
-/* Konfiguartion für Deepsleep */
-#define uS_TO_S_FACTOR 1000000
-#define TIME_TO_SLEEP 60
+#include <cstdlib>
 
-/* Konfiguartion für Sensorik */
-#define SEA_LEVEL_PREPRESSURE (1013.25)
-#define WIND_SENSOR_DATA_PIN 18
+/* Konfiguration */
 
-/* Variablen im Deppsleep beibehalten */
+// Deepsleep Konfiguration
 RTC_DATA_ATTR int bootCount = 0;
-RTC_DATA_ATTR float rainValue = 0.272727273F;
+#define uS_TO_S_FACTOR 1000000
 
-/* Konfiguration für MQTT - Kommunikation */
-const char* SSID = "IoTify";
-const char* PSK = "wBox2019";
-const char* MQTT_BROKER = "192.168.178.46";
+// WLAN Verbindungsdaten
+#define SSID "ssid"
+#define KEY 1234
 
-/* MQTT topics */
-const char* topic_temperature = "/wetterstation/temperature";
-const char* topic_humidity = "/wetterstation/humidity";
-const char* topic_pressure = "/wetterstation/pressure";
-const char* topic_windSpeed = "/wetterstation/wind_speed";
-const char* topic_windDirection = "/wetterstation/wind_direction";
-const char* topic_rain = "/wetterstation/rain";
+#define HOSTNAME "test"
 
-/* Definitionen bzw. Deklaration für den Windsensor  */
-const char* directionTable[] = {"N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"};
-float speed;    // Windgeschwindigkeit in m/s
-int direction;  // Index der directionTable (Himmelsrichtung)
- 
-/* Deklaration für den Temperatursensor */
-bool status;
-float temperature;
-float humidity;
-float pressure;
+// MQTT Konfiguration
+#define BROKER "test"
+#define PORT 1234
 
-WiFiClient espClient;
-PubSubClient client(espClient);
+/* - */
 
-Adafruit_BME280 tempSensor;
-LaCrosse_TX23 windSensor = LaCrosse_TX23(WIND_SENSOR_DATA_PIN);
+Adafruit_BME280 temperatureSensor;
+Adafruit_VEML6075 uvSensor = Adafruit_VEML6075();
+LaCrosse_TX23 windSensor = LaCrosse_TX23(39);
 
-/* Verbindung zum WLAN-Netzwerk aufbauen */
-void setup_wifi() {
-    delay(10);
-    Serial.println();
-    Serial.print("Connecting to network: ");
-    Serial.println(SSID);
- 
-    WiFi.begin(SSID, PSK);
- 
-    while (WiFi.status() != WL_CONNECTED) {
+WiFiClient wlanClient;
+PubSubclient mqttClient;
+
+void connect()
+{
+    // WLAN Verbindung aufbauen
+    Serial.println("Connect to AP:" + SSID + "..");
+
+    WiFi.begin(SSID, KEY);
+
+    while (WiFi.status() == WL_CONNECT_FAILED)
+    {
+        delay(50);
+        Serial.print(".");
+    }
+
+    WiFi.hostname(HOSTNAME);
+
+    Serial.println("\n" + "Connection established (Network: " + SSID + "). Current IP-Address: " + String(WiFi.localIP()));
+
+
+    // Verbindung mit MQTT Broker aufbauen
+    mqttClient = mqttClient(wlanClient);
+
+    mqttClient.setServer(BROKER, PORT);
+
+    Serial.print("Connect to Mqtt-Broker..");
+
+    while (!mqttClient.connect(HOSTNAME))
+    {
         delay(500);
         Serial.print(".");
     }
 
-    Serial.println("\nConnected successfully to network");
-    Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
+    Serial.println("\n" + "Connection established (Broker: " + BROKER + ")");
 }
 
-/* Verbindung bei Abbruch erneut herstellen */
-void reconnect() {
-    while (!client.connected()) {
-        Serial.println("Reconnecting...");
-        if (!client.connect("ESP32_Weatherstation")) {
-            Serial.print("...failed, rc=");
-            Serial.print(client.state());
-            Serial.println(" retrying...");
-            delay(5000);
-        }
-    }
+void updateRainfallData()
+{
+
 }
 
-int wakeup_reason() {
-    return esp_sleep_get_wakeup_cause();
-}
-
-void callback() {}
- 
 void setup() {
     Serial.begin(115200);
 
-    ++bootCount;
-    Serial.println("Anzahl der Boots / Starts: " + String(bootCount));
+    // Verbindung mit WLAN-AP und MQTT-Broker herstellen
+    connect();
+    
+    bootCount++;
+    Serial.println("Boot count: " + String(bootCount));
 
-    esp_sleep_enable_ext0_wakeup(GPIO_NUM_33,1);  // Auf Regensensor reagieren
+    esp_sleep_enable_ext0_wakeup(GPIO_NUM_33, 1);                   // Auf Regensensor reagieren
     esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);  // Auf RTC reagieren
 
-    setup_wifi();
-    client.setServer(MQTT_BROKER, 1883);
+    attachInterrupt(33, updateRainfallData, HIGH);                       // Auf Niederschlag reagieren
 
-    // Temperatursensor initialisieren bzw. starten
-    status = tempSensor.begin();
-
-    // Fehlerbehandlung falls der Sensor nicht funktioniert
-    if(!status) {
-        Serial.println("Could not find a valid BME280 sensor, check wiring, address, sensor ID!");
-        Serial.print("SensorID was: 0x"); Serial.println(tempSensor.sensorID(),16);
-        Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
-        Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
-        Serial.print("        ID of 0x60 represents a BME 280.\n");
-        Serial.print("        ID of 0x61 represents a BME 680.\n");
-    }
-
-    if (!client.connected()) {
-        reconnect();
-    }
-    client.loop();
-
-    if (wakeup_reason() == ESP_SLEEP_WAKEUP_TIMER) {
-        /* Temperatursensor auslesen */
-        temperature = tempSensor.readTemperature();
-        humidity = tempSensor.readHumidity();
-        pressure = tempSensor.readPressure() / 100.0F;
-
-        client.publish(topic_temperature, String(temperature).c_str());
-        client.publish(topic_humidity, String(humidity).c_str());
-        client.publish(topic_pressure, String(pressure).c_str());
-
-        /* Windsensor bzw. Anemometer auslesen */
-        if(windSensor.read(speed, direction)) {
-            client.publish(topic_windSpeed, String(speed, 1).c_str());
-            client.publish(topic_windDirection, directionTable[direction]);
+    // Wakeup reason: vordefinierter Timer
+    if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TIMER)
+    {
+        if (temperatureSensor.begin())
+        {
+            temperature = temperatureSensor.readTemperature();
+            humidity = temperatureSensor.readHumidity();
+            pressure = temperatureSensor.readPressure();
         }
-    } else {
-        rainValue += 0.272727273F;
-        client.publish(topic_rain, String(rainValue).c_str());
+        else
+        {
+            Serial.println("Keine Kommunikation mit BME280 möglich! Verbindung prüfen.");
+        }
+        
+        mqttClient.publish(TOPIC_TEMPERATURE, String(temperature).c_str());
+        mqttClient.publish(TOPIC_HUMIDITY, String(humidity).c_str());
+        mqttClient.publish(TOPIC_PRESSURE, String(pressure).c_str());
+
+        Serial.print("Temperatur: ");
+        Serial.println(temperature);
+        Serial.print("Luftfeuchte: ");
+        Serial.println(humidity);
+        Serial.print("Luftdruck: ");
+        Serial.println(pressure);
+
+        if (uvSensor.begin())
+        {
+            uvA = abs(uvSensor.readUVA());
+            uvB = abs(uvSensor.readUVB());
+
+            uvIndex = abs(uvSensor.readUVI());
+        } else {
+            Serial.println("Kein Kommunikation mit VEML6075 möglich! Verbindung prüfen.");
+        }
+
+        mqttClient.publish(TOPIC_UVA, String(uvA).c_str());
+        mqttClient.publish(TOPIC_UVB, String(uvB).c_str());
+        mqttClient.publish(TOPIC_UVI, String(uvIndex).c_str());    
+
+        Serial.print("UV-A: ");
+        Serial.println(uvA);
+        Serial.print("UV-B: ");
+        Serial.println(uvB);
+        Serial.print("UV-Index: ");
+        Serial.println(uvIndex);
+
+        if (windSensor.read(windSpeed, windDirection))
+        {
+            mqttClient.publish(TOPIC_WIND_SPEED, String(windSpeed).c_str());
+            mqttClient.publish(TOPIC_WIND_DIRECTION, String(windDirection).c_str());
+
+            Serial.print("Windgeschwindigkeit: ");
+            Serial.println(windSpeed);
+            Serial.print("Windrichtung: ");
+            Serial.println(windDirection);
+        }
+
+        // Helligkeit messen
+        if (analogRead(34) < 255)
+        {
+            
+        }     
     }
-
-    delay(5000);
-
-    Serial.println("Going to sleep now...");
-    Serial.flush();
-
-    /* Jegliche Verbindungen trennen */
-    client.disconnect();
-    WiFi.disconnect();
-
-    esp_deep_sleep_start();
+    // Wakeup reason: Niederschlag gefallen / Sensor ausgelöst
+    else
+    {
+        updateRainfallData();
+    }
 }
 
-void loop() {}
+void loop() {
+  // put your main code here, to run repeatedly:
+
+}
