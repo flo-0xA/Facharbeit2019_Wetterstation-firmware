@@ -1,4 +1,6 @@
 #include <Wire.h>
+#include <WiFi.h>
+#include <PubSubClient.h>
 
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
@@ -12,12 +14,13 @@
 // Deepsleep Konfiguration
 RTC_DATA_ATTR int bootCount = 0;
 #define uS_TO_S_FACTOR 1000000
+#define SLEEPTIME 5
 
 // WLAN Verbindungsdaten
-#define SSID "ssid"
-#define KEY 1234
+const char* SSID = "ssid";
+const char* KEY = "123";
 
-#define HOSTNAME "test"
+const char* HOSTNAME = "test";
 
 // MQTT Konfiguration
 #define BROKER "test"
@@ -30,12 +33,21 @@ Adafruit_VEML6075 uvSensor = Adafruit_VEML6075();
 LaCrosse_TX23 windSensor = LaCrosse_TX23(39);
 
 WiFiClient wlanClient;
-PubSubclient mqttClient;
+PubSubClient mqttClient;
+
+float temperature;
+float humidity;
+float pressure;
+
+float windSpeed;
+int windDirection;
+
+float uvA, uvB, uvIndex;
 
 void connect()
 {
     // WLAN Verbindung aufbauen
-    Serial.println("Connect to AP:" + SSID + "..");
+    Serial.println("Connect to AP:" + String(SSID) + "..");
 
     WiFi.begin(SSID, KEY);
 
@@ -45,13 +57,13 @@ void connect()
         Serial.print(".");
     }
 
-    WiFi.hostname(HOSTNAME);
+    WiFi.setHostname(HOSTNAME);
 
-    Serial.println("\n" + "Connection established (Network: " + SSID + "). Current IP-Address: " + String(WiFi.localIP()));
+    Serial.println("\nConnection established (Network: " + String(SSID) + "). Current IP-Address: " + String(WiFi.localIP()));
 
 
     // Verbindung mit MQTT Broker aufbauen
-    mqttClient = mqttClient(wlanClient);
+    mqttClient = PubSubClient(wlanClient);
 
     mqttClient.setServer(BROKER, PORT);
 
@@ -63,7 +75,7 @@ void connect()
         Serial.print(".");
     }
 
-    Serial.println("\n" + "Connection established (Broker: " + BROKER + ")");
+    Serial.println("\nConnection established (Broker: " + String(BROKER) + ")");
 }
 
 void updateRainfallData()
@@ -75,13 +87,13 @@ void setup() {
     Serial.begin(115200);
 
     // Verbindung mit WLAN-AP und MQTT-Broker herstellen
-    connect();
+//    connect();
     
     bootCount++;
     Serial.println("Boot count: " + String(bootCount));
 
     esp_sleep_enable_ext0_wakeup(GPIO_NUM_33, 1);                   // Auf Regensensor reagieren
-    esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);  // Auf RTC reagieren
+    esp_sleep_enable_timer_wakeup(SLEEPTIME * uS_TO_S_FACTOR);      // Auf RTC reagieren
 
     attachInterrupt(33, updateRainfallData, HIGH);                       // Auf Niederschlag reagieren
 
@@ -99,9 +111,9 @@ void setup() {
             Serial.println("Keine Kommunikation mit BME280 möglich! Verbindung prüfen.");
         }
         
-        mqttClient.publish(TOPIC_TEMPERATURE, String(temperature).c_str());
-        mqttClient.publish(TOPIC_HUMIDITY, String(humidity).c_str());
-        mqttClient.publish(TOPIC_PRESSURE, String(pressure).c_str());
+        mqttClient.publish("", String(temperature).c_str());
+        mqttClient.publish("", String(humidity).c_str());
+        mqttClient.publish("", String(pressure).c_str());
 
         Serial.print("Temperatur: ");
         Serial.println(temperature);
@@ -120,9 +132,9 @@ void setup() {
             Serial.println("Kein Kommunikation mit VEML6075 möglich! Verbindung prüfen.");
         }
 
-        mqttClient.publish(TOPIC_UVA, String(uvA).c_str());
-        mqttClient.publish(TOPIC_UVB, String(uvB).c_str());
-        mqttClient.publish(TOPIC_UVI, String(uvIndex).c_str());    
+        mqttClient.publish("", String(uvA).c_str());
+        mqttClient.publish("", String(uvB).c_str());
+        mqttClient.publish("TOPIC_UVI", String(uvIndex).c_str());    
 
         Serial.print("UV-A: ");
         Serial.println(uvA);
@@ -133,8 +145,8 @@ void setup() {
 
         if (windSensor.read(windSpeed, windDirection))
         {
-            mqttClient.publish(TOPIC_WIND_SPEED, String(windSpeed).c_str());
-            mqttClient.publish(TOPIC_WIND_DIRECTION, String(windDirection).c_str());
+            mqttClient.publish("", String(windSpeed).c_str());
+            mqttClient.publish("", String(windDirection).c_str());
 
             Serial.print("Windgeschwindigkeit: ");
             Serial.println(windSpeed);
@@ -146,13 +158,22 @@ void setup() {
         if (analogRead(34) < 255)
         {
             
-        }     
+        }  
+
+        // Akkuspannung auslesen
+        int adc_value = analogRead(35);
+        Serial.println("ADC value: " + String(adc_value));
+        Serial.println("Voltage: " + String((adc_value * 3.3 ) / 4095));
     }
     // Wakeup reason: Niederschlag gefallen / Sensor ausgelöst
     else
     {
         updateRainfallData();
     }
+
+    Serial.flush();
+    delay(100);
+    esp_deep_sleep_start();
 }
 
 void loop() {
