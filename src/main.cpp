@@ -111,9 +111,9 @@ void setup() {
             Serial.println("Keine Kommunikation mit BME280 möglich! Verbindung prüfen.");
         }
         
-        mqttClient.publish("", String(temperature).c_str());
-        mqttClient.publish("", String(humidity).c_str());
-        mqttClient.publish("", String(pressure).c_str());
+//        mqttClient.publish("", String(temperature).c_str());
+//        mqttClient.publish("", String(humidity).c_str());
+//        mqttClient.publish("", String(pressure).c_str());
 
         Serial.print("Temperatur: ");
         Serial.println(temperature);
@@ -132,9 +132,9 @@ void setup() {
             Serial.println("Kein Kommunikation mit VEML6075 möglich! Verbindung prüfen.");
         }
 
-        mqttClient.publish("", String(uvA).c_str());
-        mqttClient.publish("", String(uvB).c_str());
-        mqttClient.publish("TOPIC_UVI", String(uvIndex).c_str());    
+//        mqttClient.publish("", String(uvA).c_str());
+//        mqttClient.publish("", String(uvB).c_str());
+//        mqttClient.publish("TOPIC_UVI", String(uvIndex).c_str());    
 
         Serial.print("UV-A: ");
         Serial.println(uvA);
@@ -145,8 +145,8 @@ void setup() {
 
         if (windSensor.read(windSpeed, windDirection))
         {
-            mqttClient.publish("", String(windSpeed).c_str());
-            mqttClient.publish("", String(windDirection).c_str());
+//            mqttClient.publish("", String(windSpeed).c_str());
+//            mqttClient.publish("", String(windDirection).c_str());
 
             Serial.print("Windgeschwindigkeit: ");
             Serial.println(windSpeed);
@@ -154,11 +154,7 @@ void setup() {
             Serial.println(windDirection);
         }
 
-        // Helligkeit messen
-        if (analogRead(34) < 255)
-        {
-            
-        }  
+        Serial.println("Light: " + String(analogRead(34)));
 
         // Akkuspannung auslesen
         int adc_value = analogRead(35);
