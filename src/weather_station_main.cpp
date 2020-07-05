@@ -77,10 +77,10 @@ void setup() {
     else if (error_reporting)
     {
       Serial.println("Keine Messung von BME280 Sensor erfolgt.");
-      mqtt_client.publish(TOPIC_ERROR, "temperature_messuarement failed");
+      mqtt_client.publish(TOPIC_ERROR, "temperature_measurement failed");
     }
 
-    
+
     
   }
   else
