@@ -36,7 +36,7 @@ void setup() {
 
   if (!wifi_init())
   {
-    Serial.println("Verbindung zum AP fehlgeschlagen! Neustart erfolgt...");
+    Serial.println("ERROR: Verbindung zum AP fehlgeschlagen! Neustart erfolgt...");
     delay(1000);
 
     ESP.restart();
@@ -44,7 +44,7 @@ void setup() {
 
   if (mqtt_init())
   {
-    Serial.println("Verbindung zum MQTT Broker fehlgeschlagen! Neustart erfolgt...");
+    Serial.println("ERROR: Verbindung zum MQTT Broker fehlgeschlagen! Neustart erfolgt...");
     delay(1000);
 
     ESP.restart();
@@ -54,7 +54,7 @@ void setup() {
 
   if (!status)
   {
-    Serial.println("Verbindung mit BME280 Sensor fehlgeschlagen!");
+    Serial.println("ERROR: Verbindung mit BME280 Sensor fehlgeschlagen!");
   }
 
   if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TIMER)
@@ -65,7 +65,10 @@ void setup() {
       float humidity = temperature_sensor.readTemperature();
       float pressure = temperature_sensor.readPressure();
 
-      // TODO: Debug Ausgabe der Messwerte
+      Serial.println("INFO: Messung gestartet...");
+      Serial.printf("Temperatur: %d °C\n", temperature);
+      Serial.printf("Luftfeuchte: %d %\n", humidity);
+      Serial.printf("Luftdruck: %d hPa\n", pressure);
 
       mqtt_client.publish(TOPIC_TEMPERATURE, String(temperature).c_str());
       mqtt_client.publish(TOPIC_HUMIDITY, String(humidity).c_str());
@@ -73,10 +76,9 @@ void setup() {
     }
     else if (error_reporting)
     {
-      Serial.println("Keine Messung von BME280 Sensor erfolgt.");
+      Serial.println("ERROR: Keine Messung von BME280 Sensor erfolgt.");
       mqtt_client.publish(TOPIC_ERROR, "temperature_measurement failed");
     }
-
     
     float wind_speed;
     int wind_direction_index;
@@ -89,14 +91,16 @@ void setup() {
 
       char direction = direction_table[wind_direction_index];
 
-      // TODO: Debug Ausgabe der Messwerte
+      Serial.println("INFO: Messung gestartet...");
+      Serial.printf("Windrichtung: %c\n", direction);
+      Serial.printf("Windgeschwindigkeit: %d\n", wind_speed);
 
       mqtt_client.publish(TOPIC_WIND_DIRECTION, direction);
       mqtt_client.publish(TOPIC_WIND_SPEED, String(wind_spee, 1).c_str());
     }
     else if (error_reporting)
     {
-      Serial.println("Keine Messung von TX23 Sensor erfolgt.");
+      Serial.println("ERROR: Keine Messung von TX23 Sensor erfolgt.");
       mqtt_client.publish(TOPIC_ERROR, "wind_measurement failed");
     }
 
@@ -104,14 +108,15 @@ void setup() {
   }
   else
   {
-    // TODO: Debug Ausgabe der Messwerte
+    Serial.println("INFO: Wert erfasst...");
+    Serial.printf("Niederschlag: %d mm\n", RAIN_LEVEL);
 
     mqtt_client.publish(TOPIC_RAIN, String(RAIN_LEVEL).c_str());
   }
   
     delay(2000);
 
-    Serial.println("Deepsleep beginnt in kürze...");
+    Serial.println("INFO: Deepsleep beginnt in kürze...");
     Serial.flush();
 
     WiFi.disconnect();
