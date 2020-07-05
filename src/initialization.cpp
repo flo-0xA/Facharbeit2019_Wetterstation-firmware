@@ -29,14 +29,14 @@ void deepsleep_init()
 bool interface_init()
 {
     Serial.begin(UART_BAUDRATE);
-    Serial.println("Serielle Schnittstelle gestartet...");
+    Serial.println("INFO: Serielle Schnittstelle gestartet...");
 }
 
 bool wifi_init()
 {
     WiFi.begin(WIFI_SSID, WIFI_KEY);
 
-    Serial.printf("Verbinden mit %s AP ...", WIFI_SSID);
+    Serial.printf("INFO: Verbinden mit %s AP ...", WIFI_SSID);
 
     for (size_t i = 0; i < CONNECTION_ATTEMPTS; i++)
     {
@@ -52,7 +52,7 @@ bool wifi_init()
 
 bool mqtt_init()
 {
-    Serial.printf("Verbinden mit %s Broker ...", MQTT_BROKER);
+    Serial.printf("INFO: Verbinden mit %s Broker ...", MQTT_BROKER);
     mqtt_client.setServer(MQTT_BROKER, MQTT_PORT);
 
     for (size_t i = 0; i < CONNECTION_ATTEMPTS; i++)
