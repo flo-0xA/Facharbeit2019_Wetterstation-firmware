@@ -26,7 +26,7 @@
 Adafruit_BME280 temperature_sensor;
 LaCrosse_TX23 wind_sensor = LaCrosse_TX23(SENSOR_WIND);
 
-RTC_DATA_ATTR bool daytime;
+RTC_DATA_ATTR bool daytime = true;
 RTC_DATA_ATTR float battery_level;
 
 bool error_reporting = true;
@@ -68,7 +68,7 @@ void setup() {
   
   bool temperature_sesnor_status = temperature_sensor.begin();
 
-  if (!status)
+  if (!temperature_sesnor_status)
   {
     Serial.println("ERROR: Verbindung mit BME280 Sensor fehlgeschlagen!");
   }
@@ -77,16 +77,16 @@ void setup() {
   {
     // TODO: Nur ausführen, wenn Akkuspannung über Wert X - andernfalls deepsleep ausführen
 
-    if (status)
+    if (temperature_sesnor_status)
     {
       float temperature = temperature_sensor.readTemperature();
       float humidity = temperature_sensor.readTemperature();
       float pressure = temperature_sensor.readPressure();
 
       Serial.println("INFO: Messung gestartet...");
-      Serial.printf("Temperatur: %d °C\n", temperature);
-      Serial.printf("Luftfeuchte: %d %\n", humidity);
-      Serial.printf("Luftdruck: %d hPa\n", pressure);
+      Serial.printf("Temperatur: %f °C\n", temperature);
+      Serial.printf("Luftfeuchte: %f \n", humidity);
+      Serial.printf("Luftdruck: %f hPa\n", pressure);
 
       mqtt_client.publish(TOPIC_TEMPERATURE, String(temperature).c_str());
       mqtt_client.publish(TOPIC_HUMIDITY, String(humidity).c_str());
@@ -101,20 +101,20 @@ void setup() {
     float wind_speed;
     int wind_direction_index;
 
-    bool wind_sensor_status = wind_sensor.read(speed, direction_index)
+    bool wind_sensor_status = wind_sensor.read(wind_speed, wind_direction_index);
 
     if (wind_sensor_status)
     {
       const char* direction_table[] = {"N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"};
 
-      char direction = direction_table[wind_direction_index];
+      const char* direction = direction_table[wind_direction_index];
 
       Serial.println("INFO: Messung gestartet...");
-      Serial.printf("Windrichtung: %c\n", direction);
-      Serial.printf("Windgeschwindigkeit: %d\n", wind_speed);
+      Serial.printf("Windrichtung: %s\n", direction);
+      Serial.printf("Windgeschwindigkeit: %f\n", wind_speed);
 
       mqtt_client.publish(TOPIC_WIND_DIRECTION, direction);
-      mqtt_client.publish(TOPIC_WIND_SPEED, String(wind_spee, 1).c_str());
+      mqtt_client.publish(TOPIC_WIND_SPEED, String(wind_speed, 1).c_str());
     }
     else if (error_reporting)
     {
@@ -122,19 +122,19 @@ void setup() {
       mqtt_client.publish(TOPIC_ERROR, "wind_measurement failed");
     }
 
-    battery_value = analogRead();
+    // battery_value = analogRead();
 
-    Serial.println("INFO: Wert erfasst...");
-    Serial.printf("Akkuspannung: %d V\n", battery_level);
+    // Serial.println("INFO: Wert erfasst...");
+    // Serial.printf("Akkuspannung: %d V\n", battery_level);
 
-    mqtt_client.publish(TOPIC_BATTERY, String(battery_level).c_str());
+    // mqtt_client.publish(TOPIC_BATTERY, String(battery_level).c_str());
 
-    daytime = analogRead(4) < 255;  
+    // daytime = analogRead(4) < 255;  
   }
   else
   {
     Serial.println("INFO: Wert erfasst...");
-    Serial.printf("Niederschlag: %d mm\n", RAIN_LEVEL);
+    Serial.printf("Niederschlag: %f mm\n", RAIN_LEVEL);
 
     mqtt_client.publish(TOPIC_RAIN, String(RAIN_LEVEL).c_str());
   }
@@ -150,4 +150,6 @@ void setup() {
     esp_deep_sleep_start();
 }
 
-void loop() {}
+void loop() {
+  // test
+}

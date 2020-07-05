@@ -13,9 +13,9 @@
 
 #define UART_BAUDRATE 11520
 
-const int us_to_s_factor = 1000000;
-const int time_to_sleep_daytime = 60;
-const int time_to_sleep_nighttime = 1800;
+extern const int us_to_s_factor = 1000000;
+extern const int time_to_sleep_daytime = 60;
+extern const int time_to_sleep_nighttime = 1800;
 
 WiFiClient wifi_client;
 PubSubClient mqtt_client(wifi_client);
