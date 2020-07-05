@@ -80,8 +80,6 @@ void setup() {
 
   if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TIMER)
   {
-    // TODO: Nur ausführen, wenn Akkuspannung über Wert X - andernfalls deepsleep ausführen
-
     if (temperature_sesnor_status)
     {
       float temperature = temperature_sensor.readTemperature();
