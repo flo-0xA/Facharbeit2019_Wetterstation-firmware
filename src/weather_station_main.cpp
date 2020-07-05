@@ -26,13 +26,29 @@
 Adafruit_BME280 temperature_sensor;
 LaCrosse_TX23 wind_sensor = LaCrosse_TX23(SENSOR_WIND);
 
+RTC_DATA_ATTR bool daytime;
 RTC_DATA_ATTR float battery_level;
 
 bool error_reporting = true;
  
 
 void setup() {
+  interface_init();
+
   deepsleep_init();
+
+  if (daytime)
+  {
+    esp_sleep_enable_timer_wakeup(time_to_sleep_daytime * us_to_s_factor);
+
+    Serial.printf("INFO: Tagmodus ist aktiv. Deepsleep Intervall beträgt %i s\n", time_to_sleep_daytime);
+  }
+  else
+  {
+    esp_sleep_enable_timer_wakeup(time_to_sleep_nighttime * us_to_s_factor);
+
+    Serial.printf("INFO: Nachtmodus ist aktiv. Deepsleep Intervall beträgt %i s\n", time_to_sleep_nighttime);
+  }
 
   if (!wifi_init())
   {
@@ -59,6 +75,8 @@ void setup() {
 
   if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TIMER)
   {
+    // TODO: Nur ausführen, wenn Akkuspannung über Wert X - andernfalls deepsleep ausführen
+
     if (status)
     {
       float temperature = temperature_sensor.readTemperature();
@@ -104,7 +122,14 @@ void setup() {
       mqtt_client.publish(TOPIC_ERROR, "wind_measurement failed");
     }
 
-    // TODO: Akkuspannung messen und ausgeben
+    battery_value = analogRead();
+
+    Serial.println("INFO: Wert erfasst...");
+    Serial.printf("Akkuspannung: %d V\n", battery_level);
+
+    mqtt_client.publish(TOPIC_BATTERY, String(battery_level).c_str());
+
+    daytime = analogRead(4) < 255;  
   }
   else
   {

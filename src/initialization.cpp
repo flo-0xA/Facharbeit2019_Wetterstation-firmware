@@ -2,9 +2,6 @@
 #include "PubSubClient.h"
 
 
-#define US_TO_S_FACTOR 1000000
-#define TIME_TO_SLEEP 60
-
 #define CONNECTION_ATTEMPTS 10
 
 #define WIFI_SSID "AP-test"
@@ -16,6 +13,10 @@
 
 #define UART_BAUDRATE 11520
 
+const int us_to_s_factor = 1000000;
+const int time_to_sleep_daytime = 60;
+const int time_to_sleep_nighttime = 1800;
+
 WiFiClient wifi_client;
 PubSubClient mqtt_client(wifi_client);
 
@@ -23,7 +24,6 @@ PubSubClient mqtt_client(wifi_client);
 void deepsleep_init()
 {
     esp_sleep_enable_ext0_wakeup(GPIO_NUM_33,1);
-    esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * US_TO_S_FACTOR);
 }
 
 bool interface_init()
