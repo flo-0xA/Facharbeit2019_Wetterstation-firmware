@@ -26,18 +26,13 @@
 Adafruit_BME280 temperature_sensor;
 LaCrosse_TX23 wind_sensor = LaCrosse_TX23(SENSOR_WIND);
 
-RTC_DATA_ATTR uint8_t boot_count = 0;
+RTC_DATA_ATTR float battery_level;
 
 bool error_reporting = true;
-
-const char* direction_table[] = {"N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"};
-int direction;
-float speed;
  
 
 void setup() {
   deepsleep_init();
-  boot_count++;
 
   if (!wifi_init())
   {
@@ -55,7 +50,7 @@ void setup() {
     ESP.restart();
   }
   
-  bool status = temperature_sensor.begin();
+  bool temperature_sesnor_status = temperature_sensor.begin();
 
   if (!status)
   {
@@ -70,6 +65,8 @@ void setup() {
       float humidity = temperature_sensor.readTemperature();
       float pressure = temperature_sensor.readPressure();
 
+      // TODO: Debug Ausgabe der Messwerte
+
       mqtt_client.publish(TOPIC_TEMPERATURE, String(temperature).c_str());
       mqtt_client.publish(TOPIC_HUMIDITY, String(humidity).c_str());
       mqtt_client.publish(TOPIC_PRESSURE, String(pressure).c_str());
@@ -80,12 +77,36 @@ void setup() {
       mqtt_client.publish(TOPIC_ERROR, "temperature_measurement failed");
     }
 
-
     
+    float wind_speed;
+    int wind_direction_index;
+
+    bool wind_sensor_status = wind_sensor.read(speed, direction_index)
+
+    if (wind_sensor_status)
+    {
+      const char* direction_table[] = {"N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"};
+
+      char direction = direction_table[wind_direction_index];
+
+      // TODO: Debug Ausgabe der Messwerte
+
+      mqtt_client.publish(TOPIC_WIND_DIRECTION, direction);
+      mqtt_client.publish(TOPIC_WIND_SPEED, String(wind_spee, 1).c_str());
+    }
+    else if (error_reporting)
+    {
+      Serial.println("Keine Messung von TX23 Sensor erfolgt.");
+      mqtt_client.publish(TOPIC_ERROR, "wind_measurement failed");
+    }
+
+    // TODO: Akkuspannung messen und ausgeben
   }
   else
   {
-    
+    // TODO: Debug Ausgabe der Messwerte
+
+    mqtt_client.publish(TOPIC_RAIN, String(RAIN_LEVEL).c_str());
   }
   
     delay(2000);
