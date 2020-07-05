@@ -4,6 +4,10 @@
 
 #include <PubSubClient.h>
 
+extern const int us_to_s_factor;
+extern const int time_to_sleep_daytime;
+extern const int time_to_sleep_nighttime;
+
 extern PubSubClient mqtt_client;
 
 void deepsleep_init();
