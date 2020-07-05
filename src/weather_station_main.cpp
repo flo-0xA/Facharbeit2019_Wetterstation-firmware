@@ -9,8 +9,6 @@
 #include <LaCrosse_TX23.h>
 
 
-#define SENSOR_WIND 18
-
 #define SEA_LEVEL_PREPRESSURE 1013.25
 #define RAIN_LEVEL 0.272727273
 
@@ -24,7 +22,7 @@
 #define TOPIC_ERROR ""
 
 Adafruit_BME280 temperature_sensor;
-LaCrosse_TX23 wind_sensor = LaCrosse_TX23(SENSOR_WIND);
+LaCrosse_TX23 wind_sensor = LaCrosse_TX23(18);
 
 RTC_DATA_ATTR bool daytime = true;
 RTC_DATA_ATTR bool battery_lowpower = false;
@@ -129,14 +127,14 @@ void setup() {
       mqtt_client.publish(TOPIC_ERROR, "wind_measurement failed");
     }
 
-    battery_value = analogRead();
+    float battery_value = analogRead(10);
 
     battery_lowpower = battery_value < 1000;
 
     Serial.println("INFO: Wert erfasst...");
-    Serial.printf("Akkuspannung: %d V\n", battery_level);
+    Serial.printf("Akkuspannung: %f V\n", battery_value);
 
-    mqtt_client.publish(TOPIC_BATTERY, String(battery_level).c_str());
+    mqtt_client.publish(TOPIC_BATTERY, String(battery_value).c_str());
 
     daytime = analogRead(4) < 255;  
   }
