@@ -29,6 +29,12 @@ Adafruit_BME280 temperature_sensor;
 Adafruit_VEML6075 uv_sensor = Adafruit_VEML6075();
 LaCrosse_TX23 wind_sensor = LaCrosse_TX23(18);
 
+/*
+** Zustand des Tag- bzw. Nachmodus
+** Zustand des Low-Power-Modus
+**
+** Variablen bleiben nach Deepsleep bzw. Reboot erhalten.
+*/
 RTC_DATA_ATTR bool daytime = true;
 RTC_DATA_ATTR bool battery_lowpower = false;
 
@@ -40,6 +46,11 @@ void setup() {
 
   deepsleep_init();
 
+  /*
+  ** Tag- Nachmodus bzw. Low-Power-Modus
+  **
+  ** Je nachdem, welcher Fall (Tag, Nacht oder Akkusatnd niedrig) auftritt, wird das Sleep-Intervall auf deffinierte Werte angepasst.
+  */
   if (battery_lowpower)
   {
     esp_sleep_enable_timer_wakeup(time_to_sleep_lowpower * us_to_s_factor);
@@ -76,6 +87,9 @@ void setup() {
     ESP.restart();
   }
   
+  /*
+  ** Temperatur Sensor (BME280) und UV-Sensor (VEML6075) initialisieren (I2C)
+  */
   bool temperature_sensor_status = temperature_sensor.begin();
   bool uv_sensor_status = uv_sensor.begin();
 
@@ -84,8 +98,17 @@ void setup() {
     Serial.println("ERROR: Verbindung mit BME280 Sensor fehlgeschlagen!");
   }
 
+  /*
+  ** Grund des Aufwachens aus dem Deepsleep
+  **
+  ** Beim ersten Fall (die vordeffinierte Zeit ist überschritten), werden alle Sensoren überprüft und deren Messwerte übertragen.
+  ** Andernfalls wurde der Niederschlagssensor ausgelöst, sodass eine fixe Konstante als Messwert übertragen wird.
+  */
   if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TIMER)
   {
+    /*
+    ** Wird nur ausgeführt, wenn der Sensor funktioniert. Andernfalls wird der Fehler via RS-232 dokumentiert.
+    */
     if (temperature_sensor_status)
     {
       float temperature = temperature_sensor.readTemperature();
@@ -107,6 +130,9 @@ void setup() {
       mqtt_client.publish(TOPIC_ERROR, "temperature_measurement failed");
     }
 
+    /*
+    ** Wird nur ausgeführt, wenn der Sensor funktioniert. Andernfalls wird der Fehler via RS-232 dokumentiert.
+    */
     if (uv_sensor_status)
     {
       float uv_a = abs(uv_sensor.readUVA());
@@ -131,8 +157,14 @@ void setup() {
     float wind_speed;
     int wind_direction_index;
 
+    /*
+    ** Wind Sensor (TX23) initialisieren und Messwerte ermitteln
+    */
     bool wind_sensor_status = wind_sensor.read(wind_speed, wind_direction_index);
 
+    /*
+    ** Wird nur ausgeführt, wenn der Sensor funktioniert. Andernfalls wird der Fehler via RS-232 dokumentiert.
+    */
     if (wind_sensor_status)
     {
       const char* direction_table[] = {"N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"};
@@ -154,6 +186,9 @@ void setup() {
 
     float battery_value = analogRead(10);
 
+    /*
+    ** Low-Power-Modus aktivieren wenn der Schwellenwert unterschritten wurde
+    */
     battery_lowpower = battery_value < 1000;
 
     Serial.println("INFO: Wert erfasst...");
@@ -161,6 +196,9 @@ void setup() {
 
     mqtt_client.publish(TOPIC_BATTERY, String(battery_value).c_str());
 
+    /*
+    ** Tag bzw. Nacht ermitteln und Tag- bzw. Nachtmodus aktivieren
+    */
     daytime = analogRead(4) < 255;  
   }
   else
@@ -168,6 +206,9 @@ void setup() {
     Serial.println("INFO: Wert erfasst...");
     Serial.printf("Niederschlag: %f mm\n", RAIN_LEVEL);
 
+    /*
+    ** Konstanten Wert (0,272727273 mm/Tick) übertragen
+    */
     mqtt_client.publish(TOPIC_RAIN, String(RAIN_LEVEL).c_str());
   }
   
@@ -176,6 +217,9 @@ void setup() {
     Serial.println("INFO: Deepsleep beginnt in kürze...");
     Serial.flush();
 
+    /*
+    ** Verbindungen zum AP und MQTT Broker trennen, um Verbindungsfehler zu vermeiden
+    */
     WiFi.disconnect();
     mqtt_client.disconnect();
 
