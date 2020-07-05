@@ -13,17 +13,17 @@
 #define SEA_LEVEL_PREPRESSURE 1013.25
 #define RAIN_LEVEL 0.272727273
 
-#define TOPIC_TEMPERATURE ""
-#define TOPIC_HUMIDITY ""
-#define TOPIC_PRESSURE ""
-#define TOPIC_UVA ""
-#define TOPIC_UVB ""
-#define TOPIC_UV_INDEX ""
-#define TOPIC_WIND_SPEED ""
-#define TOPIC_WIND_DIRECTION ""
-#define TOPIC_RAIN ""
-#define TOPIC_BATTERY ""
-#define TOPIC_ERROR ""
+#define TOPIC_TEMPERATURE "/weatherstation/temperature"
+#define TOPIC_HUMIDITY "/weatherstation/humidity"
+#define TOPIC_PRESSURE "/weatherstation/pressure"
+#define TOPIC_UVA "/weatherstation/uv/a"
+#define TOPIC_UVB "/weatherstation/uv/b"
+#define TOPIC_UV_INDEX "/weatherstation/uv/index"
+#define TOPIC_WIND_SPEED "/weatherstation/wind/speed"
+#define TOPIC_WIND_DIRECTION "/weatherstation/wind/direction"
+#define TOPIC_RAIN "/weatherstation/rain"
+#define TOPIC_BATTERY "/weatherstation/battery"
+#define TOPIC_ERROR "/weatherstation/error"
 
 Adafruit_BME280 temperature_sensor;
 Adafruit_VEML6075 uv_sensor = Adafruit_VEML6075();
@@ -55,19 +55,19 @@ void setup() {
   {
     esp_sleep_enable_timer_wakeup(time_to_sleep_lowpower * us_to_s_factor);
 
-    Serial.printf("INFO: Wenig Energie vorhanden. Deepsleep verängert - %i s\n", time_to_sleep_lowpower);
+    Serial.printf("INFO: Wenig Energie vorhanden. Deepsleep verängert - %isek\n", time_to_sleep_lowpower);
   }
   else if (daytime)
   {
     esp_sleep_enable_timer_wakeup(time_to_sleep_daytime * us_to_s_factor);
 
-    Serial.printf("INFO: Tagmodus ist aktiv. Deepsleep Intervall beträgt %i s\n", time_to_sleep_daytime);
+    Serial.printf("INFO: Tagmodus ist aktiv. Deepsleep Intervall beträgt %isek \n", time_to_sleep_daytime);
   }
   else
   {
     esp_sleep_enable_timer_wakeup(time_to_sleep_nighttime * us_to_s_factor);
 
-    Serial.printf("INFO: Nachtmodus ist aktiv. Deepsleep Intervall beträgt %i s\n", time_to_sleep_nighttime);
+    Serial.printf("INFO: Nachtmodus ist aktiv. Deepsleep Intervall beträgt %isek\n", time_to_sleep_nighttime);
   }
   
 
@@ -79,7 +79,7 @@ void setup() {
     ESP.restart();
   }
 
-  if (mqtt_init())
+  if (!mqtt_init())
   {
     Serial.println("ERROR: Verbindung zum MQTT Broker fehlgeschlagen! Neustart erfolgt...");
     delay(1000);
@@ -92,11 +92,6 @@ void setup() {
   */
   bool temperature_sensor_status = temperature_sensor.begin();
   bool uv_sensor_status = uv_sensor.begin();
-
-  if (!temperature_sensor_status)
-  {
-    Serial.println("ERROR: Verbindung mit BME280 Sensor fehlgeschlagen!");
-  }
 
   /*
   ** Grund des Aufwachens aus dem Deepsleep
@@ -218,10 +213,12 @@ void setup() {
     Serial.flush();
 
     /*
-    ** Verbindungen zum AP und MQTT Broker trennen, um Verbindungsfehler zu vermeiden
+    ** Verbindungen zum AP und MQTT Broker trennen, um IO- und Verbindungsfehler zu vermeiden
     */
-    WiFi.disconnect();
     mqtt_client.disconnect();
+    WiFi.disconnect();
+    
+    delay(100);
 
     esp_deep_sleep_start();
 }
