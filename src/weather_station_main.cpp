@@ -6,6 +6,7 @@
 
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
+#include <Adafruit_VEML6075.h>
 #include <LaCrosse_TX23.h>
 
 
@@ -15,6 +16,9 @@
 #define TOPIC_TEMPERATURE ""
 #define TOPIC_HUMIDITY ""
 #define TOPIC_PRESSURE ""
+#define TOPIC_UVA ""
+#define TOPIC_UVB ""
+#define TOPIC_UV_INDEX ""
 #define TOPIC_WIND_SPEED ""
 #define TOPIC_WIND_DIRECTION ""
 #define TOPIC_RAIN ""
@@ -22,6 +26,7 @@
 #define TOPIC_ERROR ""
 
 Adafruit_BME280 temperature_sensor;
+Adafruit_VEML6075 uv_sensor = Adafruit_VEML6075();
 LaCrosse_TX23 wind_sensor = LaCrosse_TX23(18);
 
 RTC_DATA_ATTR bool daytime = true;
@@ -71,24 +76,25 @@ void setup() {
     ESP.restart();
   }
   
-  bool temperature_sesnor_status = temperature_sensor.begin();
+  bool temperature_sensor_status = temperature_sensor.begin();
+  bool uv_sensor_status = uv_sensor.begin();
 
-  if (!temperature_sesnor_status)
+  if (!temperature_sensor_status)
   {
     Serial.println("ERROR: Verbindung mit BME280 Sensor fehlgeschlagen!");
   }
 
   if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TIMER)
   {
-    if (temperature_sesnor_status)
+    if (temperature_sensor_status)
     {
       float temperature = temperature_sensor.readTemperature();
-      float humidity = temperature_sensor.readTemperature();
+      float humidity = temperature_sensor.readHumidity();
       float pressure = temperature_sensor.readPressure();
 
       Serial.println("INFO: Messung gestartet...");
       Serial.printf("Temperatur: %f °C\n", temperature);
-      Serial.printf("Luftfeuchte: %f \n", humidity);
+      Serial.printf("Luftfeuchte: %f \%\n", humidity);
       Serial.printf("Luftdruck: %f hPa\n", pressure);
 
       mqtt_client.publish(TOPIC_TEMPERATURE, String(temperature).c_str());
@@ -99,6 +105,27 @@ void setup() {
     {
       Serial.println("ERROR: Keine Messung von BME280 Sensor erfolgt.");
       mqtt_client.publish(TOPIC_ERROR, "temperature_measurement failed");
+    }
+
+    if (uv_sensor_status)
+    {
+      float uv_a = abs(uv_sensor.readUVA());
+      float uv_b = abs(uv_sensor.readUVB());
+      float uv_index = abs(uv_sensor.readUVI());
+
+      Serial.println("INFO: Messung gestartet...");
+      Serial.printf("UV-A: %f\n", uv_a);
+      Serial.printf("UV-B: %f\n", uv_b);
+      Serial.printf("UV Index: %f\n", uv_index);
+
+      mqtt_client.publish(TOPIC_UVA, String(uv_a).c_str());
+      mqtt_client.publish(TOPIC_UVB, String(uv_b).c_str());
+      mqtt_client.publish(TOPIC_UV_INDEX, String(uv_index).c_str());
+    }
+    else if (error_reporting)
+    {
+      Serial.println("ERROR: Keine Messung von VEML6075 Sensor erfolgt.");
+      mqtt_client.publish(TOPIC_ERROR, "uv_measurement failed");
     }
     
     float wind_speed;
