@@ -10,7 +10,7 @@
 #define WIFI_KEY "2124234431346"
 
 #define MQTT_BROKER "hostname"
-#define MQTT_PORT 1884
+#define MQTT_PORT 1883
 
 #define UART_BAUDRATE 11520
 
@@ -59,6 +59,7 @@ bool wifi_init()
             return true;
         }
         Serial.print(".");
+        delay(50);
     }
     return false;
 }
