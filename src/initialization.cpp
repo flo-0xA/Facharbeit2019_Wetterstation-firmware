@@ -16,6 +16,7 @@
 extern const int us_to_s_factor = 1000000;
 extern const int time_to_sleep_daytime = 60;
 extern const int time_to_sleep_nighttime = 1800;
+extern const int time_to_sleep_lowpower = 3600;
 
 WiFiClient wifi_client;
 PubSubClient mqtt_client(wifi_client);
