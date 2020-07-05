@@ -16,7 +16,6 @@
 
 RTC_DATA_ATTR uint8_t boot_count = 0;
 
-
 const char* direction_table[] = {"N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"};
 int direction;
 float speed;
@@ -29,8 +28,25 @@ float pressure;
 
 void setup() {
   deepsleep_init();
+  boot_count++;
 
+  if (!wifi_init())
+  {
+    Serial.println("Verbindung zum AP fehlgeschlagen! Neustart erfolgt...");
+    delay(1000);
 
+    ESP.restart();
+  }
+
+  if (mqtt_init())
+  {
+    Serial.println("Verbindung zum MQTT Broker fehlgeschlagen! Neustart erfolgt...");
+    delay(1000);
+
+    ESP.restart();
+  }
+  
+  
 }
 
 void loop() {}
