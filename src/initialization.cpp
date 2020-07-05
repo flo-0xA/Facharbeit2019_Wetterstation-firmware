@@ -35,7 +35,7 @@ bool wifi_init()
 {
     WiFi.begin(WIFI_SSID, WIFI_KEY);
 
-    Serial.printf("Verbinden mit %d AP ...", WIFI_SSID);
+    Serial.printf("Verbinden mit %s AP ...", WIFI_SSID);
 
     for (size_t i = 0; i < CONNECTION_ATTEMPTS; i++)
     {
@@ -51,7 +51,7 @@ bool wifi_init()
 
 bool mqtt_init()
 {
-    Serial.printf("Verbinden mit %d Broker ...", MQTT_BROKER);
+    Serial.printf("Verbinden mit %s Broker ...", MQTT_BROKER);
     mqtt_client.setServer(MQTT_BROKER, MQTT_PORT);
 
     for (size_t i = 0; i < CONNECTION_ATTEMPTS; i++)
