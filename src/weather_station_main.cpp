@@ -169,6 +169,15 @@ void setup()
   // Ladestand des Akkus erfassen
   float battery_value = analogRead(10);
 
+  if (battery_value <= 3.0)
+  {
+    low_power_mode = true;
+  }
+  else
+  {
+    low_power_mode = false;
+  }
+
   Serial.printf("Battery value: %f\n", battery_value);
   mqtt.publish(TOPIC_BATTERY, String(battery_value).c_str());
 
