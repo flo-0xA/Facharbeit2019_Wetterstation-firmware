@@ -47,12 +47,12 @@ void setup()
 
   if (low_power_mode)
   {
-    esp_sleep_enable_timer_wakeup(10800 * 1000000);
+    esp_sleep_enable_timer_wakeup(10800 * 1000000LL);
     Serial.println("INFO: low-power-mode active! sleep time set to 180 minutes");
   }
   else
   {
-    esp_sleep_enable_timer_wakeup(3600 * 1000000);
+    esp_sleep_enable_timer_wakeup(3600 * 1000000LL);
     Serial.println("INFO: sleep time set to 60 minutes");
   }
 
