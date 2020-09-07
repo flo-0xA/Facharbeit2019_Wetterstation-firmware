@@ -16,7 +16,9 @@ PubSubClient mqtt(wifi);
 
 Adafruit_BME280 temperature_sensor;
 Adafruit_VEML6075 uv_sensor = Adafruit_VEML6075();
-// TX23_Custom wind_sensor;
+//TX23_Custom wind_sensor;
+
+bool low_power_mode = false;
 
 void IRAM_ATTR ISR()
 {
@@ -42,7 +44,17 @@ void setup()
 
   // Stromspar- und Interrupt Konfiguration
   esp_sleep_enable_ext0_wakeup(GPIO_NUM_33, 1);
-  esp_sleep_enable_timer_wakeup(60 * 1000000);
+
+  if (low_power_mode)
+  {
+    esp_sleep_enable_timer_wakeup(10800 * 1000000);
+    Serial.println("INFO: low-power-mode active! sleep time set to 180 minutes");
+  }
+  else
+  {
+    esp_sleep_enable_timer_wakeup(3600 * 1000000);
+    Serial.println("INFO: sleep time set to 60 minutes");
+  }
 
   attachInterrupt(GPIO_NUM_33, ISR, HIGH);
 
@@ -82,7 +94,7 @@ void setup()
   }
 
   // Sensoren initialieren
-  bool temperature_sensor_status = temperature_sensor.begin();
+  bool temperature_sensor_status = temperature_sensor.begin(0x76);
   bool uv_sensor_status = uv_sensor.begin();
   // bool wind_sensor_status = wind_sensor.begin();
 
