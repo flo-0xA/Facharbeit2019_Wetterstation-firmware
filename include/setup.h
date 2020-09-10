@@ -14,9 +14,6 @@
 
 #define HOSTNAME "wetter-station"
 
-#define OTA_PORT 3232
-#define OTA_PASSWORD "123456789"
-
 #define STATION "AP-HFG54JH3"
 #define KEY "0854700482640451"
 

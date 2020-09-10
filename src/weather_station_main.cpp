@@ -1,5 +1,4 @@
 #include "setup.h"
-#include "ota.h"
 #include "tx23_custom.h"
 
 #include <Arduino.h>
@@ -12,7 +11,6 @@
 
 
 WiFiClient wifi;
-OTA ota;
 PubSubClient mqtt(wifi);
 
 Adafruit_BME280 temperature_sensor;
@@ -63,20 +61,9 @@ void setup()
 
   boot_count++;
   Serial.printf("INFO: %i. boot\n", boot_count);
-
-  // Alle 3 Stunden OTA aktivieren, wenn Stromsparmodus nicht aktiv ist
-  if ((boot_count % 3 == 0) && !low_power_mode)
-  {
-    ota.begin(OTA_PORT, OTA_PASSWORD);
-    ota.start();
-
-    delay(5000);
-
-    ota.stop();
-  }
   
   // WLAN initialisieren
-  WiFi.setHostname(HOSTNAME);
+  //WiFi.setHostname(HOSTNAME);
   WiFi.mode(WIFI_STA);
   WiFi.setAutoConnect(false);
   WiFi.setAutoReconnect(true);
