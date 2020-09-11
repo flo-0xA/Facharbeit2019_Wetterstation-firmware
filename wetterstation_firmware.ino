@@ -9,7 +9,7 @@
  * 
  * MIT License
  *
- * Copyright (c) [2020] [Florian Abeln]
+ * Copyright (c) 2020 Florian Abeln
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -68,7 +68,8 @@ PubSubClient mqtt(wifi);
 Adafruit_BME280 temperature_sensor;
 Adafruit_VEML6075 uv_sensor = Adafruit_VEML6075();
 
-bool low_power_mode = false;
+RTC_DATA_ATTR int boot_count = 0;
+RTC_DATA_ATTR bool low_power_mode = false;
 
 void IRAM_ATTR ISR()
 {
@@ -107,6 +108,9 @@ void setup()
   }
 
   attachInterrupt(GPIO_NUM_33, ISR, HIGH);
+  
+  boot_count++;
+  Serial.printf("INFO: %i. boot\n", boot_count);
 
   // WLAN initialisieren
   WiFi.setHostname(HOSTNAME);
@@ -202,9 +206,9 @@ void setup()
   }
 
   // Ladestand des Akkus erfassen
-  float battery_value = analogRead(10);
+  float battery_value = analogRead(35) * 3.3 / 4095;
 
-  if (battery_value <= 3.0)
+  if (battery_value <= 2.0)
   {
     low_power_mode = true;
   }
